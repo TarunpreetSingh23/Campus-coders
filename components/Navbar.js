@@ -1,5 +1,6 @@
 "use client"
 import React, { useState } from 'react';
+import { useSession } from "next-auth/react"; 
 
 // Helper function to generate Lucide-style SVG icons for a single-file React component.
 const Icon = ({ name, className = "w-4 h-4 mr-1" }) => {
@@ -39,24 +40,42 @@ const Icon = ({ name, className = "w-4 h-4 mr-1" }) => {
                 <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
             </svg>
         ),
+        // New Icon for Register/Sign-up (UserPlus)
+        'UserPlus': (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="16" x2="22" y1="11" y2="11"/>
+            </svg>
+        ),
     };
     return iconMap[name] || null;
 };
 
 // Main Navbar Component
 const Navbar = () => {
+      const { data: session } = useSession(); 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    const navItems = [
-        { name: 'File Complaint', href: '/file-complaint', icon: 'Edit3', primary: true },
+    // Separating main links from the primary action (Register) for better layout control
+    const mainNavItems = [
+        { name: 'File Complaint', href: '/file-complaint', icon: 'Edit3', primary: false },
         { name: 'View Complaints', href: '/view-complaint', icon: 'ListChecks', primary: false },
-        { name: 'NGO Directory', href: '#ngo-directory', icon: 'Users', primary: false },
+        { name: 'Lost & Found', href: '/lost-found', icon: 'ListChecks', primary: false },
+        { name: 'NGO Directory', href: '/ngo-listing', icon: 'Users', primary: false },
         { name: 'Insights', href: '/insights', icon: 'Info', primary: false },
     ];
+    
+    // The new primary action button
+      const primaryNavItem = session
+    ? { name: "Profile", href: "/profile", icon: "Users", primary: true }
+    : { name: "Register", href: "/register", icon: "UserPlus", primary: true };
+
+    // Combine for mobile menu
+    const navItems = [...mainNavItems, primaryNavItem]; 
 
     // Tailwind classes for link transition effect
     const baseLinkClasses = "transition duration-150 ease-in-out flex items-center nav-link rounded-lg";
-    const desktopClasses = "hidden md:flex md:space-x-4 md:items-center md:ml-6";
+    // desktopClasses now only holds the main links, and a new div holds the primary button
+    const mainDesktopClasses = "hidden md:flex md:space-x-4 md:items-center"; 
     const mobileClasses = "md:hidden pb-2 space-y-1";
 
     return (
@@ -71,40 +90,56 @@ const Navbar = () => {
                         </a>
                     </div>
 
-                    {/* Desktop Menu */}
-                    <div className={desktopClasses}>
-                        {navItems.map(item => (
-                            <a 
-                                key={item.name} 
-                                href={item.href}
-                                className={`${baseLinkClasses} ${item.primary 
-                                    ? 'bg-blue-700 text-white px-3 py-2 text-sm font-medium hover:bg-blue-600 shadow-md transform hover:translate-y-[-1px]'
-                                    : 'text-white hover:bg-blue-700 px-3 py-2 text-sm font-medium transform hover:translate-y-[-1px]'
-                                }`}
-                            >
-                                <Icon name={item.icon} className="w-4 h-4 mr-1" />
-                                {item.name}
-                            </a>
-                        ))}
-                    </div>
+                    {/* Desktop Menu - Main Links and Register Button */}
+                    <div className="flex items-center">
+                        {/* Main Navigation Links */}
+                        <div className={mainDesktopClasses}>
+                            {mainNavItems.map(item => (
+                                <a 
+                                    key={item.name} 
+                                    href={item.href}
+                                    className={`${baseLinkClasses} ${item.primary 
+                                        ? 'bg-blue-700 text-white px-3 py-2 text-sm font-medium hover:bg-blue-600 shadow-md transform hover:translate-y-[-1px]'
+                                        : 'text-white hover:bg-blue-700 px-3 py-2 text-sm font-medium transform hover:translate-y-[-1px]'
+                                    }`}
+                                >
+                                    <Icon name={item.icon} className="w-4 h-4 mr-1" />
+                                    {item.name}
+                                </a>
+                            ))}
+                        </div>
 
-                    {/* Mobile Menu Button */}
-                    <div className="md:hidden">
-                        <button 
-                            type="button" 
-                            onClick={() => setIsMenuOpen(!isMenuOpen)} 
-                            className="bg-blue-700 inline-flex items-center justify-center p-2 rounded-lg text-white hover:text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-800 focus:ring-white transition duration-150 ease-in-out" 
-                            aria-controls="mobile-menu" 
-                            aria-expanded={isMenuOpen}
-                        >
-                            <span className="sr-only">Open main menu</span>
-                            {/* Toggle Icons based on state */}
-                            {isMenuOpen ? (
-                                <Icon name="X" className="block h-6 w-6" />
-                            ) : (
-                                <Icon name="Menu" className="block h-6 w-6" />
-                            )}
-                        </button>
+                        {/* Primary Action Button (Register) - Desktop */}
+                        <div className="hidden md:block md:ml-6">
+                             <a 
+                                key={primaryNavItem.name} 
+                                href={primaryNavItem.href}
+                                className={`${baseLinkClasses} bg-white text-[#2563EB] px-4 py-2 text-sm font-bold rounded-full shadow-lg transform transition duration-150 ease-in-out hover:bg-gray-100 hover:scale-[1.02]`}
+                            >
+                                <Icon name={primaryNavItem.icon} className="w-4 h-4 mr-1 text-[#2563EB]" />
+                                {primaryNavItem.name}
+                            </a>
+                        </div>
+
+
+                        {/* Mobile Menu Button */}
+                        <div className="md:hidden ml-4">
+                            <button 
+                                type="button" 
+                                onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                                className="bg-blue-700 inline-flex items-center justify-center p-2 rounded-lg text-white hover:text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-blue-800 focus:ring-white transition duration-150 ease-in-out" 
+                                aria-controls="mobile-menu" 
+                                aria-expanded={isMenuOpen}
+                            >
+                                <span className="sr-only">Open main menu</span>
+                                {/* Toggle Icons based on state */}
+                                {isMenuOpen ? (
+                                    <Icon name="X" className="block h-6 w-6" />
+                                ) : (
+                                    <Icon name="Menu" className="block h-6 w-6" />
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -119,11 +154,11 @@ const Navbar = () => {
                                 href={item.href}
                                 onClick={() => setIsMenuOpen(false)} // Close menu on click
                                 className={`${baseLinkClasses} block px-3 py-2 text-base font-medium mt-1 ${item.primary 
-                                    ? 'bg-blue-700 text-white hover:bg-blue-600'
+                                    ? 'bg-white text-[#2563EB] hover:bg-gray-100 font-bold' // Primary button style for mobile
                                     : 'text-white hover:bg-blue-700'
                                 }`}
                             >
-                                <Icon name={item.icon} className="w-5 h-5 mr-2" />
+                                <Icon name={item.icon} className={`w-5 h-5 mr-2 ${item.primary ? 'text-[#2563EB]' : ''}`} />
                                 {item.name}
                             </a>
                         ))}
