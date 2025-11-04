@@ -35,7 +35,7 @@ export default function RootLayout({ children }) {
         <SessionWrapper>
     {/* bg-[#e3e6f3]     */}
   <Navbar />
-          <div className="bg-gray-50 ">
+          <div className="bg-gray-200 ">
   {/* <Loader /> */}
             {children}
               {/* <Toaster position="top-right" reverseOrder={false} /> */}

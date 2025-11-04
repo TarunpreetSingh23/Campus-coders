@@ -1,3 +1,4 @@
+// models/LostFound.js
 import mongoose from "mongoose";
 
 const LostFoundSchema = new mongoose.Schema({
@@ -6,12 +7,11 @@ const LostFoundSchema = new mongoose.Schema({
   type: { type: String, enum: ["Lost", "Found"], required: true },
   itemName: String,
   description: String,
-  image: String, // base64 or URL
-  location: {
-    lat: Number,
-    lng: Number,
-  },
+  image: String,
+  location: { lat: Number, lng: Number },
   address: String,
+  policeStationId: String, // ✅ Reference the verified ID
+  policeStationName: String, // For display purposes
   date: { type: Date, default: Date.now },
 });
 

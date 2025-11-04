@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 // import connectDB from "@/lib/mongodb";
 import { connects } from "@/dbconfig/dbconfig";
-import Complaint from "@/models/complaintmodel";
+import Task from "@/models/Task";
 
 export async function GET() {
   await connects();
-  const complaints = await Complaint.find().sort({ createdAt: -1 });
+  const complaints = await Task.find().sort({ createdAt: -1 });
+  console.log(complaints)
   return NextResponse.json({ success: true, complaints });
 }
 
 export async function POST(req) {
   await connects();
   const data = await req.json();
-  const newComplaint = await Complaint.create(data);
+  const newComplaint = await Task.create(data);
   return NextResponse.json({ success: true, complaint: newComplaint });
 }
 
@@ -23,7 +24,7 @@ export async function PATCH(req) {
 
   if (!id) return NextResponse.json({ success: false, message: "Missing ID" });
 
-  const updated = await Complaint.findByIdAndUpdate(
+  const updated = await Task.findByIdAndUpdate(
     id,
     { status, department },
     { new: true }

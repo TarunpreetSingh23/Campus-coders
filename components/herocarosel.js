@@ -6,7 +6,7 @@ import { Megaphone, MapPin, ClipboardList } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gray-900 ">
+    <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden bg-gray-900 ">
       {/* Background Image */}
       <Image
         src="/images/city-bg.jpg" // Replace with your own background
@@ -17,7 +17,7 @@ export default function Hero() {
       />
 
       {/* Content Container */}
-      <div className="relative z-10 text-center px-6 sm:px-10 max-w-4xl">
+      <div className="relative z-10 text-center  px-6 sm:px-10 max-w-4xl">
         <motion.h1
           className="text-4xl sm:text-6xl font-extrabold text-white mb-6 leading-tight"
           initial={{ opacity: 0, y: 20 }}
@@ -49,7 +49,7 @@ export default function Hero() {
           transition={{ duration: 1.2 }}
         >
           <Link
-            href="/submit"
+            href="/file-complaint"
             className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-full font-medium shadow-lg transition-all"
           >
             Submit Your Complaint

@@ -1,67 +1,69 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import HeroCarousel from "@/components/herocarosel"; // Assuming this component exists
+import dynamic from "next/dynamic";
+import HeroCarousel from "@/components/herocarosel";
+const UserMap = dynamic(() => import("@/components/UseMap"), { ssr: false });
 
-// --- Mock Data (Moved to the top for easy editing) ---
 
-// Services data for the "Most Booked" section
-const MOST_BOOKED_SERVICES = [
+// --- Recharts for Graph ---
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from "recharts";
+const visionData = [
   {
-    name: "Manicure ",
-    image: "/images/mpm.jpg",
-    rating: 4.79,
-    reviews: "3.2M",
-    currentPrice: "₹0",
-    originalPrice: "₹0",
-    // ADDED LINK:
-    href: "/services/manicure",
+    title: "Our Vision",
+    text: "To build a transparent, tech-enabled platform that bridges citizens, police, and NGOs — ensuring every issue is resolved efficiently and with trust.",
+    color: "from-blue-400 to-blue-600",
+    align: "left",
   },
   {
-    name: "Bleach & Facial",
-    image: "/images/vee4.jpg",
-    rating: 4.91,
-    reviews: "1.1M",
-    currentPrice: "₹0",
-    originalPrice: "₹0",
-    // ADDED LINK:
-    href: "/services/facial",
+    title: "Our Mission",
+    text: "To empower communities through digital collaboration — where innovation, empathy, and accountability work hand in hand for public service.",
+    color: "from-sky-400 to-indigo-500",
+    align: "right",
   },
   {
-    name: "Theme Decor",
-    image: "/images/wd.jpg",
-    rating: 4.79,
-    reviews: "68K",
-    currentPrice: "₹0",
-    originalPrice: null,
-    // ADDED LINK:
-    href: "/services/theme",
-  },
-  {
-    name: "kitchen Cleaning",
-    image: "/images/kc.jpg",
-    rating: 4.72,
-    reviews: "69K",
-    currentPrice: "₹0",
-    originalPrice: null,
-    // ADDED LINK:
-    href: "/services/kitchen",
+    title: "Our Future",
+    text: "Expanding our ecosystem across cities with AI-driven insights, smart reporting tools, and stronger partnerships to make governance people-centric.",
+    color: "from-cyan-400 to-blue-500",
+    align: "left",
   },
 ];
+
+// --- Recent Complaints Section ---
 const RecentComplaints = () => {
   const [complaints, setComplaints] = useState([]);
+   const [complaintsmap, setComplaintsmap] = useState([]);
   const [loading, setLoading] = useState(true);
+  const fetchComplaintsmap = async () => {
+    try {
+      const res = await fetch("/api/complaints");
+      const data = await res.json();
+      if (data.success) setComplaintsmap(data.complaintsmap);
+    } catch (err) {
+      console.error("Error fetching complaints:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchComplaintsmap();
+  }, []);
 
   useEffect(() => {
     async function fetchComplaints() {
       try {
         const res = await fetch("/api/solved");
         const data = await res.json();
-
-        // ensure data is always an array
         const formatted = Array.isArray(data)
           ? data
           : Array.isArray(data.complaints)
@@ -99,9 +101,8 @@ const RecentComplaints = () => {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white border border-gray-200 rounded-3xl shadow-md hover:shadow-lg transition-all p-6"
+          className="bg-gradient-to-b from-blue-50 to-white border border-gray-200 rounded-3xl shadow-md hover:shadow-lg transition-all p-6"
         >
-          {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <img
@@ -122,7 +123,6 @@ const RecentComplaints = () => {
                 </p>
               </div>
             </div>
-
             <span
               className={`text-xs px-3 py-1 rounded-full font-medium ${
                 c.status === "Resolved"
@@ -136,32 +136,27 @@ const RecentComplaints = () => {
             </span>
           </div>
 
-          {/* Complaint */}
           <p className="text-gray-800 leading-relaxed mb-3">{c.complaint}</p>
 
-          {/* Optional address */}
           {c.address && (
             <p className="text-sm text-gray-500 mb-3">
               📍 <span className="italic">{c.address}</span>
             </p>
           )}
 
-          {/* Optional department */}
           {c.department && (
             <p className="text-sm text-purple-600 mb-3">
               🏢 Assigned to: <span className="font-medium">{c.department}</span>
             </p>
           )}
 
-          {/* Type Tag */}
           <div className="flex flex-wrap gap-2 mb-4">
             <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full font-medium">
               {c.type || "General"}
             </span>
           </div>
 
-          {/* Footer Actions */}
-          <div className="flex justify-between text-gray-500 text-sm border-t border-gray-100 pt-3">
+          {/* <div className="flex justify-between text-gray-500 text-sm border-t border-gray-100 pt-3">
             <button className="flex items-center gap-2 hover:text-red-500 transition">
               ❤️ <span>Like</span>
             </button>
@@ -171,165 +166,18 @@ const RecentComplaints = () => {
             <button className="flex items-center gap-2 hover:text-gray-800 transition">
               🔁 <span>Share</span>
             </button>
-          </div>
+          </div> */}
         </motion.div>
       ))}
     </div>
   );
 };
 
-// Categories for Beauty & Grooming
-const BEAUTY_CATEGORIES = [
-  { id: 1, name: "Party Makeup", image: "/images/m.jpeg", href: "/services/party-makeup" },
-  { id: 2, name: "Bridal Makeup", image: "/images/vee5.jpg", href: "/services/bridal-makeup" },
-  { id: 3, name: "Manicure & Pedicure", image: "/images/mpm.jpg", href: "/services/manicure" },
-  { id: 4, name: "Bleach & Facial", image: "/images/vee4.jpg", href: "/services/bleach" },
-  { id: 5, name: "Hair Styling", image: "/images/m.jpeg", href: "/services/hair" },
-  { id: 6, name: "Threading", image: "/images/tm.jpg", href: "/services/threading" },
-  { id: 7, name: "Waxing", image: "/images/wm.jpg", href: "/services/waxing" },
-]
-// Categories for Cleaning Serservices
-const CLEANING_CATEGORIES = [
-  
-  { id: 2, name: "Office/Commercial Cleaning", image: "/images/oc.jpg", href: "/services/office" },
-  { id: 3, name: "Carpet Cleaning", image: "/images/cc.webp", href: "/services/carpet" },
-  { id: 4, name: "Window Cleaning", image: "/images/wc.jpg", href: "/services/window" },
-  { id: 5, name: "Sofa & Furniture Cleaning", image: "/images/hc.webp", href: "/services/sofa" },
-  { id: 6, name: "Kitchen Appliance Cleaning", image: "/images/kc.jpg", href: "/services/kitchen" },
-  { id: 7, name: "Bathroom Sanitization", image: "/images/washc.webp", href: "/services/bathroom" },
-  { id: 1, name: "Home Deep Cleaning", image: "/images/hc1.webp", href: "/services/home" },
-];
-
-// Categories for Event Decor
-const EVENT_CATEGORIES = [
-  { id: 1, name: "Birthday Decor", image: "/images/bd.jpg", href: "/services/birthday" },
-  { id: 2, name: "Wedding Decor", image: "/images/wd.jpg", href: "/services/wedding" },
-  { id: 3, name: "Corporate Event", image: "/images/event-corporate.jpg", href: "/services/corporate" },
-  { id: 4, name: "Balloon Decoration", image: "/images/event-balloons.jpg", href: "/services/balloons" },
-  { id: 5, name: "Flower Arrangements", image: "/images/event-flowers.jpg", href: "/services/flowers" },
-  { id: 6, name: "Stage & Lighting", image: "/images/event-stage.jpg", href: "/services/stage" },
-];
-
-
-// --- Sub-Components ---
-
-// Reusable Service Card Component
-const ServiceCard = ({ service }) => (
-  <Link href={service.href} passHref>
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-    className="flex flex-col rounded-2xl border border-gray-100 overflow-hidden shadow-xl bg-white transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] transform-gpu cursor-pointer"
-  >
-
-  
-    <div className="relative h-48 sm:h-52 w-full bg-gray-50 overflow-hidden">
-      <Image
-        src={service.image.startsWith('/') ? service.image : `/${service.image}`}
-        alt={service.name}
-        layout="fill"
-        objectFit="cover"
-        className="transition-transform duration-700 hover:scale-[1.05]"
-      />
-    </div>
-
-    <div className="p-4 flex flex-col justify-between flex-grow">
-      {/* Service Name */}
-      <p className="text-base font-semibold text-gray-900 mb-2 leading-snug min-h-[40px] line-clamp-2">
-        {service.name}
-      </p>
-
-      {/* Rating and Reviews */}
-      <div className="flex items-center text-sm mb-2">
-        <svg className="w-4 h-4 text-yellow-500 fill-current mr-1" viewBox="0 0 24 24">
-          <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" />
-        </svg>
-        <span className="text-gray-900 font-medium">{service.rating}</span>
-        <span className="text-gray-500 ml-1">({service.reviews} Booked)</span>
-      </div>
-
-      {/* Price */}
-      <div className="flex items-baseline space-x-2">
-        <span className="text-xl font-bold text-[#2856c2]">{service.currentPrice}</span>
-        {service.originalPrice && (
-          <span className="text-sm text-gray-400 line-through">
-            {service.originalPrice}
-          </span>
-        )}
-      </div>
-    </div>
-  </motion.div>
-  </Link>
-);
-
-// Reusable Category Grid Section
-const CategorySection = ({ title, categories, viewAllHref }) => (
-  <section className="bg-white py-10 md:py-16">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Title with Gradient Separator */}
-      <div className="text-center mb-12">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
-          {title}
-        </h2>
-        <div className="h-1 mx-auto w-24 bg-gradient-to-r from-[#2856c2] to-pink-500 rounded-full" />
-      </div>
-
-      {/* Categories Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-6">
-        {categories.slice(0, 7).map((cat) => (
-          <Link
-            key={cat.id}
-            href={cat.href || `/services/${cat.name.toLowerCase().replace(/\s/g, '-')}`}
-            className="group relative flex flex-col rounded-xl shadow-lg bg-white overflow-hidden 
-                         transition-all duration-300 ease-out hover:shadow-2xl transform-gpu hover:-translate-y-1"
-          >
-            {/* Image Container */}
-            <div className="relative w-full h-38 sm:h-45 bg-gray-100 overflow-hidden">
-              <Image
-                src={cat.image.startsWith('/') ? cat.image : `/${cat.image}`}
-                alt={cat.name}
-                layout="fill"
-                objectFit="cover"
-                className="absolute inset-0 w-full h-full group-hover:scale-[1.07] transition-transform duration-700 ease-in-out"
-              />
-              {/* Category Name Overlay */}
-              <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                <p className="text-xl font-semibold text-white truncate">{cat.name}</p>
-              </div>
-            </div>
-          </Link>
-        ))}
-
-        {/* View All Card (Call-to-action) */}
-        <Link
-          href={viewAllHref}
-          className="bg-gradient-to-br from-[#2856c2] via-[#010c4e] to-[#081d81]
-                     shadow-xl flex flex-col items-center justify-center text-white 
-                     font-extrabold text-xl p-8 transition-all duration-500 rounded-xl
-                     hover:scale-[1.05] hover:shadow-2xl hover:bg-opacity-90 transform-gpu"
-        >
-          <span className="text-5xl mb-2">→</span>
-          View All {title.split(' ')[0]}
-        </Link>
-      </div>
-    </div>
-  </section>
-);
-
-
-// Page Loader Component
+// --- Page Loader ---
 function PageLoader() {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-gray-900 z-50">
-      <Image
-        src="/images/LOGO (2).jpg"
-        alt="Logo"
-        width={180}
-        height={60}
-        className="mb-6"
-      />
-      {/* Centered loader bar */}
+      <Image src="/images/LOGO (2).jpg" alt="Logo" width={180} height={60} className="mb-6" />
       <div className="w-48 h-1 bg-gray-700 rounded overflow-hidden">
         <div className="h-full bg-[#3ab4ff] animate-loaderLine"></div>
       </div>
@@ -337,215 +185,170 @@ function PageLoader() {
   );
 }
 
-// Modern Footer Component
-const Footer = () => (
-  <footer className="bg-gray-900 text-white pt-12 pb-6 mt-16">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-b border-gray-700 pb-8">
-        {/* Logo/Brand Section */}
-        <div className="col-span-2 md:col-span-1">
-          <Link href="/">
-            <Image
-              src="/images/LOGO (2).jpg"
-              alt="Brand Logo"
-              width={150}
-              height={50}
-              objectFit="contain"
-            />
-          </Link>
-          <p className="mt-4 text-gray-400 text-sm max-w-xs">
-            Your one-stop destination for home services, beauty, and event planning. Book a pro today!
-          </p>
-        </div>
-
-        {/* Quick Links */}
-        <div>
-          <h4 className="text-lg font-semibold text-[#3ab4ff] mb-4">Quick Links</h4>
-          <ul className="space-y-2 text-sm">
-            <li><Link href="/about" className="text-gray-400 hover:text-white transition">About Us</Link></li>
-            <li><Link href="/careers" className="text-gray-400 hover:text-white transition">Careers</Link></li>
-            <li><Link href="/blog" className="text-gray-400 hover:text-white transition">Blog</Link></li>
-            <li><Link href="/faq" className="text-gray-400 hover:text-white transition">FAQ</Link></li>
-          </ul>
-        </div>
-
-        {/* Services */}
-        <div>
-          <h4 className="text-lg font-semibold text-[#3ab4ff] mb-4">Our Services</h4>
-          <ul className="space-y-2 text-sm">
-            <li><Link href="/cleaning" className="text-gray-400 hover:text-white transition">Cleaning</Link></li>
-            <li><Link href="/beauty" className="text-gray-400 hover:text-white transition">Beauty & Grooming</Link></li>
-            <li><Link href="/eventdecor" className="text-gray-400 hover:text-white transition">Event Decor</Link></li>
-            <li><Link href="/repairs" className="text-gray-400 hover:text-white transition">Home Repairs</Link></li>
-          </ul>
-        </div>
-
-        {/* Contact Us */}
-        <div>
-          <h4 className="text-lg font-semibold text-[#3ab4ff] mb-4">Contact</h4>
-          <ul className="space-y-2 text-sm">
-            <li className="text-gray-400">Email: support@website.com</li>
-            <li className="text-gray-400">Phone: +91 98765 43210</li>
-            <li className="text-gray-400">Address: 123 Service Lane, City, Country</li>
-            <div className="flex space-x-4 mt-4">
-              {/* Social Icons (Placeholder) */}
-              <a href="#" className="text-gray-400 hover:text-white transition"><i className="fab fa-facebook-f"></i></a>
-              <a href="#" className="text-gray-400 hover:text-white transition"><i className="fab fa-twitter"></i></a>
-              <a href="#" className="text-gray-400 hover:text-white transition"><i className="fab fa-instagram"></i></a>
-            </div>
-          </ul>
-        </div>
-      </div>
-
-      {/* Copyright */}
-      <div className="mt-6 text-center text-gray-500 text-sm">
-        &copy; {new Date().getFullYear()} YourCompanyName. All rights reserved. | <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
-      </div>
-    </div>
-    {/* Note: You may need to install font-awesome/react-fontawesome for the social icons */}
-  </footer>
-);
+// --- Footer ---
 
 
-// --- Main Page Component ---
+// --- Main Page ---
 export default function Home() {
   const { data: session } = useSession();
-  const cleaningRef = useRef(null);
-  const eventRef = useRef(null);
-  const beautyRef = useRef(null);
-  // Using local mock data instead of useState/useEffect for services for simplicity, 
-  // as the original fetch was mocked out anyway.
   const [loading, setLoading] = useState(true);
 
-  // Unified loading control
+  // Simulate small loader
   useEffect(() => {
-    // Simulates initial loading of data or assets
-    const timer = setTimeout(() => setLoading(false), 800); 
+    const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
   }, []);
 
   if (loading) return <PageLoader />;
 
-  // Scroll handlers for quick navigation (can be used in a header component)
-  const scrollToCleaning = () => cleaningRef.current?.scrollIntoView({ behavior: "smooth" });
-  const scrollToBeauty = () => beautyRef.current?.scrollIntoView({ behavior: "smooth" });
-  const scrollToEvent = () => eventRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Mock data for daily complaint trends
+  const complaintData = [
+    { time: "8 AM", count: 4 },
+    { time: "10 AM", count: 7 },
+    { time: "12 PM", count: 10 },
+    { time: "2 PM", count: 8 },
+    { time: "4 PM", count: 12 },
+    { time: "6 PM", count: 9 },
+  ];
 
   return (
     <>
-      {/* 1. Hero Carousel */}
-      <div className=" mb-8 sm:mb-12">
-        <HeroCarousel /> 
+      {/* Hero Section */}
+      <div className="">
+        <HeroCarousel />
       </div>
 
-      {/* 2. Most Booked Services Section */}
-     <section className="bg-white py-10 md:py-16 px-4 sm:px-6 lg:px-8">
-  <div className="max-w-7xl mx-auto">
-    {/* Section Title */}
-    {/* <div className="text-center mb-12">
-      <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
-        Our <span className="text-[#2856c2]">Top Rated</span> Services
-      </h2>
-      <p className="text-lg text-gray-500">Book confidently from our most popular and highest-rated professionals.</p>
-      <div className="h-1 mx-auto w-24 bg-gradient-to-r from-pink-500 to-[#2856c2] rounded-full mt-4" />
-    </div> */}
-
-    {/* Services Grid */}
-    {/* <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-4 md:gap-8 lg:gap-10">
-      {MOST_BOOKED_SERVICES.map((service, index) => (
-        <ServiceCard key={index} service={service} />
-      ))}
-    </div> */}
-    {/* ✅ Recently Solved Complaints Section */}
-<section className="bg-white py-10 md:py-16 px-4 sm:px-6 lg:px-8">
-  <div className="max-w-3xl mx-auto">
-   <div className="text-center mb-12">
-      <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
-        Our <span className="text-[#2856c2]">Top Rated</span> Services
-      </h2>
-      <p className="text-lg text-gray-500">Book confidently from our most popular and highest-rated professionals.</p>
-      <div className="h-1 mx-auto w-24 bg-gradient-to-r from-pink-500 to-[#2856c2] rounded-full mt-4" />
-    </div>
-
-    <RecentComplaints />
-  </div>
-</section>
-
-  </div>
-</section>
-<section className="bg-white py-10 md:py-16 px-4 sm:px-6 lg:px-8">
-  <div className="max-w-3xl mx-auto">
-   <div className="text-center mb-12">
-      <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
-        Recently <span className="text-[#2856c2]">Solved </span> Complaints
-      </h2>
-      <p className="text-lg text-gray-500">Book confidently from our most popular and highest-rated professionals.</p>
-      <div className="h-1 mx-auto w-24 bg-gradient-to-r from-pink-500 to-[#2856c2] rounded-full mt-4" />
-    </div>
-
-    <RecentComplaints />
-  </div>
-</section>
-      
-      {/* --- Horizontal Divider --- */}
-      <div className="h-0.5 bg-gray-100 mx-auto max-w-7xl" />
-
-
-      {/* 3. Cleaning Services Category Section */}
-      <div ref={cleaningRef}>
-        <CategorySection 
-          title="Home & Office Cleaning"
-          categories={CLEANING_CATEGORIES}
-          viewAllHref="/clean"
-        />
-      </div>
-
-      {/* --- Horizontal Divider --- */}
-      <div className="h-0.5 bg-gray-100 mx-auto max-w-7xl" />
-
-
-      {/* 4. Beauty & Grooming Category Section */}
-      <div ref={beautyRef}>
-        <CategorySection
-          title="Beauty & Grooming"
-          categories={BEAUTY_CATEGORIES}
-          viewAllHref="/facial"
-        />
-      </div>
-
-      {/* --- Horizontal Divider --- */}
-      <div className="h-0.5 bg-gray-100 mx-auto max-w-7xl" />
-
-
-      {/* 5. Event Decoration Category Section */}
-      <div ref={eventRef}>
-        <CategorySection
-          title="Event Decoration"
-          categories={EVENT_CATEGORIES}
-          viewAllHref="/eventdecor"
-        />
-      </div>
-
-      {/* 6. A Simple Call-to-Action Banner */}
-      {/* <section className="bg-[#f0f4ff] py-16 mt-16">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
-            Ready to Book Your Next Service? 🚀
-          </h2>
-          <p className="text-lg text-gray-600 mb-8">
-            Experience the best in professional service delivery, right at your doorstep.
-          </p>
-          <Link
-            href="/all-services"
-            className="inline-flex items-center justify-center px-10 py-4 border border-transparent text-lg font-medium rounded-full shadow-2xl text-white bg-gradient-to-r from-[#2856c2] to-indigo-600 hover:from-indigo-600 hover:to-[#2856c2] transition-all duration-300 transform hover:scale-[1.05]"
-          >
-            Explore All Services
-          </Link>
+      {/* Recently Solved Complaints */}
+      <section className="bg-gradient-to-b from-white to-blue-50 py-10 md:py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
+              Recently <span className="text-[#2856c2]">Solved</span> Complaints
+            </h2>
+            <p className="text-lg text-gray-500">
+              See how effectively citizen complaints are being resolved in real-time.
+            </p>
+            <div className="h-1 mx-auto w-24 bg-gradient-to-r from-pink-500 to-[#2856c2] rounded-full mt-4" />
+          </div>
+          <RecentComplaints />
         </div>
-      </section> */}
+      </section>
 
-      {/* 7. Footer */}
+      {/* Divider */}
+      <div className="h-0.5 bg-gray-100 mx-auto max-w-7xl" />
+
+      {/* Complaint Trends Graph */}
+      <section className="bg-gradient-to-b from-blue-50 to-white py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+            Today’s <span className="text-[#2856c2]">Complaint Trends</span>
+          </h2>
+          <p className="text-lg text-gray-500 mb-10">
+            Live insight into how complaints are being registered throughout the day.
+          </p>
+
+          <div className="bg-white border border-gray-100 shadow-xl rounded-3xl p-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="w-full h-80"
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={complaintData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                  <XAxis dataKey="time" stroke="#555" />
+                  <YAxis stroke="#555" />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#2856c2"
+                    strokeWidth={3}
+                    dot={{ r: 6, fill: "#2856c2" }}
+                    activeDot={{ r: 8 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Complaint Map */}
+      <section className="bg-gradient-to-b from-white to-blue-50 py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+            Complaint <span className="text-[#2856c2]">Location Map</span>
+          </h2>
+          <p className="text-lg text-gray-500 mb-10">
+            Visualize where complaints are being reported in real-time.
+          </p>
+
+          <div className="overflow-hidden rounded-3xl shadow-xl border border-gray-100">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31500.000000000004!2d77.5946!3d12.9716!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670d8b9a4e3%3A0xe9dbe4b5c0a9b7f!2sBangalore!5e0!3m2!1sen!2sin!4v1698240000000!5m2!1sen!2sin"
+              width="100%"
+              height="450"
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+        </div>
+      </section>
+       <section className="relative py-24 px-6 bg-gradient-to-b from-blue-50 to-white text-gray-900 overflow-hidden">
+            {/* Heading */}
+            <h2 className="text-center text-4xl font-extrabold mb-16 tracking-wide">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
+                Our Vision & Mission
+              </span>
+            </h2>
       
+            {/* Vision Circles */}
+            <div className="flex flex-col items-center space-y-12 max-w-3xl mx-auto">
+              {visionData.map((item, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                  className={`relative flex ${
+                    item.align === "left" ? "justify-start" : "justify-end"
+                  } w-full`}
+                >
+                  {/* Gradient Outer Circle */}
+                  <div
+                    className={`w-80 h-80 rounded-full bg-gradient-to-br ${item.color} p-[2px] shadow-xl`}
+                  >
+                    {/* Inner Glass Effect */}
+                    <div className="w-full h-full rounded-full bg-white/60 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 shadow-inner border border-white/70 hover:shadow-lg hover:shadow-blue-400/30 transition-shadow">
+                      <h3 className="text-2xl font-semibold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-cyan-700">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {item.text}
+                      </p>
+                    </div>
+                  </div>
+      
+                  {/* Glow Background */}
+                  <div
+                    className={`absolute inset-0 blur-3xl opacity-40 bg-gradient-to-br ${item.color} rounded-full -z-10 ${
+                      item.align === "left"
+                        ? "translate-x-[-25%]"
+                        : "translate-x-[25%]"
+                    }`}
+                  ></div>
+                </motion.div>
+              ))}
+            </div>
+      
+            {/* Decorative subtle gradient line */}
+            <div className="absolute top-0 left-1/2 w-[1px] h-full bg-gradient-to-b from-blue-300 via-blue-200 to-transparent opacity-30"></div>
+          </section>
+
+      {/* Footer */}
+    
     </>
   );
 }
